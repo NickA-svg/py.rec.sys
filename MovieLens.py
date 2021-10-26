@@ -119,7 +119,7 @@ class MovieLens:
     
     def getMiseEnScene(self):
         mes = defaultdict(list)
-        with open("LLVisualFeatures13K_Log.csv", newline='') as csvfile:
+        with open("/Users/nick.aristidou@convexin.com/Documents/Projects/Python/py.rec.sys/LLVisualFeatures13K_Log.csv", newline='') as csvfile:
             mesReader = csv.reader(csvfile)
             next(mesReader)
             for row in mesReader:
