@@ -59,6 +59,7 @@ class MovieLens:
         return userRatings
 
     def getPopularityRanks(self):
+        #gets most popular films - highest number of ratings is rank 1, ie movieID 356 has 341 ratings and is rank 1.
         ratings = defaultdict(int)
         rankings = defaultdict(int)
         with open(self.ratingsPath, newline='') as csvfile:
