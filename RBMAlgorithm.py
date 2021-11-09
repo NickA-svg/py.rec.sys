@@ -2,6 +2,7 @@ from surprise import AlgoBase
 from surprise import PredictionImpossible
 import numpy as np
 from RBM import RBM
+from MovieLens import MovieLens
 
 class RBMAlgorithm(AlgoBase):
 
@@ -11,12 +12,30 @@ class RBMAlgorithm(AlgoBase):
         self.hiddenDim = hiddenDim
         self.learningRate = learningRate
         self.batchSize = batchSize
+        self.ml = MovieLens()
+        self.ml.loadMovieLensLatestSmall()
+        self.stoplist = ["sex", "drug"]
+        
+    def buildStoplist(self, trainset):
+        self.stoplistLookup = {}
+        for iiid in trainset.all_items():
+            self.stoplistLookup[iiid] = False
+            movieID = trainset.to_raw_iid(iiid)
+            title = self.ml.getMovieName(int(movieID))
+            if (title):
+                title = title.lower()
+                for term in self.stoplist:
+                    if term in title:
+                        print ("Blocked ", title)
+                        self.stoplistLookup[iiid] = True    
         
     def softmax(self, x):
         return np.exp(x) / np.sum(np.exp(x), axis=0)
 
     def fit(self, trainset):
         AlgoBase.fit(self, trainset)
+        
+        self.buildStoplist(trainset)
 
         numUsers = trainset.n_users
         numItems = trainset.n_items
@@ -24,8 +43,9 @@ class RBMAlgorithm(AlgoBase):
         trainingMatrix = np.zeros([numUsers, numItems, 10], dtype=np.float32)
         
         for (uid, iid, rating) in trainset.all_ratings():
-            adjustedRating = int(float(rating)*2.0) - 1
-            trainingMatrix[int(uid), int(iid), adjustedRating] = 1
+            if not self.stoplistLookup[iid]:
+                adjustedRating = int(float(rating)*2.0) - 1
+                trainingMatrix[int(uid), int(iid), adjustedRating] = 1
         
         # Flatten to a 2D array, with nodes for each possible rating type on each possible item, for every user.
         trainingMatrix = np.reshape(trainingMatrix, [trainingMatrix.shape[0], -1])
